@@ -3,7 +3,7 @@
 
 <head>
   <meta charset="UTF-8">
-  <title>todolist by bootstrap</title>
+  <title>todolist by VUE</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link href="https://cdn.bootcss.com/bootstrap/3.3.7/css/bootstrap.min.css" rel="stylesheet">
   <script src="https://cdn.bootcss.com/vue/2.2.6/vue.js"></script>
@@ -12,12 +12,22 @@
       text-decoration: line-through;
       color: #999;
     }
+    .item-cont{
+      margin: 0 90px 0 20px;
+      display: block;
+      font-weight: normal;
+      font-size: 14px;
+    }
+    input.item-cont{
+      margin:0;
+      width:100%;
+    }
   </style>
 </head>
 
 <body>
   <div class="container" id="app">
-    <h1>TodoMVC</h1>
+    <h1>TodoMVC - VUE</h1>
     <div class="panel panel-default">
       <div class="panel-heading">TODO LIST</div>
       <div class="panel-body">
@@ -39,8 +49,10 @@
           <div class="col-sm-offset-2 col-sm-10">
             <ul class="list-group">
               <li class="list-group-item" v-for="(todo, index) in filteredTodos" :class="{del: todo.completed == true}">
-                <input type="checkbox" v-model="todo.completed"> {{todo.title}}
-                <button class="btn btn-warning btn-xs pull-right" @click="deleteTodo(index)">delete</button>
+                <button class="btn btn-warning btn-xs pull-right" @click="deleteTodo(index)" v-show="isEdit != todo">delete</button>
+                <input type="checkbox" v-model="todo.completed" class="pull-left" v-show="isEdit != todo">
+                <label class="item-cont" :for="'todoEdit'+index" v-show="isEdit != todo" @dblclick="editTodo(todo)">{{todo.title}}</label>
+                <input type="text" class="item-cont" :id="'todoEdit'+index" v-model="edit" @blur="cancelTodo(todo)" @keyup.esc="cancelTodo(todo)" @keyup.enter="saveTodo(todo)" v-show="isEdit === todo" :focus="isEdit === todo" v-todo-focus="isEdit === todo">
               </li>
             </ul>
           </div>
@@ -63,10 +75,6 @@
     var todoStorage = {
       fetch: function () {
         var todos = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
-        // todos.forEach(function (todo, index) {
-        //   todo.id = index;
-        // });
-        // todoStorage.uid = todos.length;
         return todos;
       },
       save: function (todos) {
@@ -95,7 +103,9 @@
       data: {
         todos: todoStorage.fetch(),
         newTodo: "",
-        visibility: "all"
+        visibility: "all",
+        isEdit: null,
+        edit: ''
       },
       watch: {
         todos: {
@@ -129,6 +139,26 @@
         },
         removeComputed: function () {
           this.todos = filters.active(this.todos)
+        },
+        editTodo: function (item){
+          if(!item.completed){
+            this.edit = item.title;
+            this.isEdit = item;
+          }
+        },
+        cancelTodo: function(item){
+          this.isEdit = null;
+        },
+        saveTodo: function(item){
+          item.title = this.edit;
+          this.isEdit = null;
+        }
+      },
+      directives: {
+        'todo-focus': function (el, binding) {
+          if (binding.value) {
+            el.focus()
+          }
         }
       }
     })
