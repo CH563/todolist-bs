@@ -6,7 +6,6 @@
   <title>todolist by JQUERY</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link href="https://cdn.bootcss.com/bootstrap/3.3.7/css/bootstrap.min.css" rel="stylesheet">
-  <script src="https://cdn.bootcss.com/jquery/3.2.0/jquery.min.js"></script>
   <style>
     .del {
       text-decoration: line-through;
@@ -66,161 +65,164 @@
       查看：<a href="todos-vue.html">todos-vue</a>
     </div>
   </div>
+  <script src="https://cdn.bootcss.com/require.js/2.3.5/require.min.js"></script>
   <script type="text/javascript">
-    var doc = $(document)
-    // 本地应用缓存
-    var STORAGE_KEY = 'todos-bs';
-    var todoStorage = {
-      fetch: function () {
-        var todos = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
-        return todos;
-      },
-      save: function (todos) {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(todos));
-      }
-    };
+    require(['https://cdn.bootcss.com/jquery/3.2.0/jquery.min.js'], function (){
+      var doc = $(document)
+      // 本地应用缓存
+      var STORAGE_KEY = 'todos-bs';
+      var todoStorage = {
+        fetch: function () {
+          var todos = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+          return todos;
+        },
+        save: function (todos) {
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(todos));
+        }
+      };
 
-    // 清除全部显示
-    var clearAll = function(list){
-      if(list.some(function(e){return e.completed})){
-        $(".clear-all").show()
-      }else{
-        $(".clear-all").hide()
+      // 清除全部显示
+      var clearAll = function(list){
+        if(list.some(function(e){return e.completed})){
+          $(".clear-all").show()
+        }else{
+          $(".clear-all").hide()
+        }
       }
-    }
 
-    // 渲染todo列表
-    var showList = function(list){
-      var listDom = '';
-      for(var i =0; i< list.length; i++){
-        listDom += "<li class='list-group-item "+ (list[i].completed?'del':'') + "'><button class='btn btn-warning btn-xs pull-right btn-del'>delete</button><input type='checkbox'"+ (list[i].completed?'checked':'') + " class='pull-left checkbox'><label class='item-cont'>"+ list[i].title +"</label><input type='text' class='item-cont' style='display:none;'></li>"
+      // 渲染todo列表
+      var showList = function(list){
+        var listDom = '';
+        for(var i =0; i< list.length; i++){
+          listDom += "<li class='list-group-item "+ (list[i].completed?'del':'') + "'><button class='btn btn-warning btn-xs pull-right btn-del'>delete</button><input type='checkbox'"+ (list[i].completed?'checked':'') + " class='pull-left checkbox'><label class='item-cont'>"+ list[i].title +"</label><input type='text' class='item-cont' style='display:none;'></li>"
+        }
+        $(".list-group").html(listDom);
+        clearAll(list)
       }
-      $(".list-group").html(listDom);
-      clearAll(list)
-    }
-    showList(todoStorage.fetch())
-
-    // 添加todo
-    var addTodo = function(value){
-      var todoList = todoStorage.fetch();
-      todoList.push({
-        title: value,
-        completed: false
-      })
-      todoStorage.save(todoList)
       showList(todoStorage.fetch())
-      $("#todoInput").val('')
-    }
 
-    // 删除
-    var delTodo = function(index){
-      var todoList = todoStorage.fetch();
-      todoList.splice(index, 1);
-      todoStorage.save(todoList)
-    }
-
-    // 添加按钮添加
-    $("#add").on("click", function(e){
-      e.preventDefault()
-      if($("#todoInput").val().trim()){
-        addTodo($("#todoInput").val().trim())
+      // 添加todo
+      var addTodo = function(value){
+        var todoList = todoStorage.fetch();
+        todoList.push({
+          title: value,
+          completed: false
+        })
+        todoStorage.save(todoList)
+        showList(todoStorage.fetch())
+        $("#todoInput").val('')
       }
-    })
 
-    // 回车添加
-    $("#todoInput").on("keyup", function(e){
-      if($(this).val().trim() && e.keyCode === 13){
-        addTodo($(this).val().trim())
-      }
-    })
-
-    // 删除
-    doc.on("click", ".btn-del", function(){
-      var parent = $(this).parents('li');
-      var index = parent.index()
-      parent.animate({left:'-50%', opacity:'0'}, 200);
-      setTimeout(function(){
-        parent.remove();
-      }, 200)
-      delTodo(index)
-    })
-
-    // 删除全部已完全
-    doc.on("click", ".clear-all", function(){
-      $(this).hide();
-      var todoList = todoStorage.fetch().filter(function(item){
-        return item.completed === false;
-      })
-      $(".list-group").find(".del").animate({left:'-50%', opacity:'0'}, 200);
-      setTimeout(function(){
-        $(".list-group").find(".del").remove();
-      }, 200)
-      todoStorage.save(todoList)
-    })
-
-    // 改变状态
-    doc.on("change", ".checkbox", function(){
-      var parent = $(this).parents('li');
-      var index = parent.index();
-      var todoList = todoStorage.fetch();
-      if(this.checked){
-        parent.addClass("del");
-        todoList[index].completed = true;
-      }else{
-        parent.removeClass("del");
-        todoList[index].completed = false;
-      }
-      clearAll(todoList)
-      todoStorage.save(todoList)
-    })
-
-    // 编辑
-    doc.on("dblclick", ".item-cont", function(){
-      $(this).hide();
-      $(this).prevAll().hide();
-      $(this).next().show().focus().val($(this).text());
-    })
-
-    // 处理编辑
-    doc.on("keyup", "input.item-cont", function(e){
-      var todoList = todoStorage.fetch()
-      var val = $(this).val().trim()
-      if(e.keyCode === 13 && val){
-        $(this).prev().text(val)
-        $(this).val('').hide()
-        $(this).prevAll().show()
-        todoList[$(this).parent().index()].title = val
+      // 删除
+      var delTodo = function(index){
+        var todoList = todoStorage.fetch();
+        todoList.splice(index, 1);
         todoStorage.save(todoList)
       }
-      if(e.keyCode === 27){
+
+      // 添加按钮添加
+      $("#add").on("click", function(e){
+        e.preventDefault()
+        if($("#todoInput").val().trim()){
+          addTodo($("#todoInput").val().trim())
+        }
+      })
+
+      // 回车添加
+      $("#todoInput").on("keyup", function(e){
+        if($(this).val().trim() && e.keyCode === 13){
+          addTodo($(this).val().trim())
+        }
+      })
+
+      // 删除
+      doc.on("click", ".btn-del", function(){
+        var parent = $(this).parents('li');
+        var index = parent.index()
+        parent.animate({left:'-50%', opacity:'0'}, 200);
+        setTimeout(function(){
+          parent.remove();
+        }, 200)
+        delTodo(index)
+      })
+
+      // 删除全部已完全
+      doc.on("click", ".clear-all", function(){
+        $(this).hide();
+        var todoList = todoStorage.fetch().filter(function(item){
+          return item.completed === false;
+        })
+        $(".list-group").find(".del").animate({left:'-50%', opacity:'0'}, 200);
+        setTimeout(function(){
+          $(".list-group").find(".del").remove();
+        }, 200)
+        todoStorage.save(todoList)
+      })
+
+      // 改变状态
+      doc.on("change", ".checkbox", function(){
+        var parent = $(this).parents('li');
+        var index = parent.index();
+        var todoList = todoStorage.fetch();
+        if(this.checked){
+          parent.addClass("del");
+          todoList[index].completed = true;
+        }else{
+          parent.removeClass("del");
+          todoList[index].completed = false;
+        }
+        clearAll(todoList)
+        todoStorage.save(todoList)
+      })
+
+      // 编辑
+      doc.on("dblclick", ".item-cont", function(){
+        $(this).hide();
+        $(this).prevAll().hide();
+        $(this).next().show().focus().val($(this).text());
+      })
+
+      // 处理编辑
+      doc.on("keyup", "input.item-cont", function(e){
+        var todoList = todoStorage.fetch()
+        var val = $(this).val().trim()
+        if(e.keyCode === 13 && val){
+          $(this).prev().text(val)
+          $(this).val('').hide()
+          $(this).prevAll().show()
+          todoList[$(this).parent().index()].title = val
+          todoStorage.save(todoList)
+        }
+        if(e.keyCode === 27){
+          $(this).val('').hide()
+          $(this).prevAll().show()
+        }
+      })
+      doc.on("blur", "input.item-cont", function(){
         $(this).val('').hide()
         $(this).prevAll().show()
-      }
-    })
-    doc.on("blur", "input.item-cont", function(){
-      $(this).val('').hide()
-      $(this).prevAll().show()
-    })
+      })
 
-    // 类别显示
-    $(".nav-pills").on("click", "li", function(){
-      var todoList;
-      if(!$(this).hasClass("active")){
-        $(this).addClass("active").siblings().removeClass("active");
-        if($(this).index() === 0){
-          todoList = todoStorage.fetch()
-        }else if($(this).index() === 1){
-          todoList = todoStorage.fetch().filter(function(item){
-            return item.completed === false
-          })
-        }else{
-          todoList = todoStorage.fetch().filter(function(item){
-            return item.completed === true
-          })
+      // 类别显示
+      $(".nav-pills").on("click", "li", function(){
+        var todoList;
+        if(!$(this).hasClass("active")){
+          $(this).addClass("active").siblings().removeClass("active");
+          if($(this).index() === 0){
+            todoList = todoStorage.fetch()
+          }else if($(this).index() === 1){
+            todoList = todoStorage.fetch().filter(function(item){
+              return item.completed === false
+            })
+          }else{
+            todoList = todoStorage.fetch().filter(function(item){
+              return item.completed === true
+            })
+          }
+          showList(todoList)
         }
-        showList(todoList)
-      }
-    })
+      })
+　　});
   </script>
 </body>
 
